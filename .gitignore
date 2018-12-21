@@ -1,0 +1,23 @@
+# dev environment
+.venv
+.env
+.idea
+.vscode
+
+# packages
+build
+dist
+*.egg-info
+test
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Others
+.DS_Store
+
+# mypy
+.mypy_cache
+
+# tox
+.tox
