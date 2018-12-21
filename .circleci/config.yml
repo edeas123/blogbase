@@ -1,0 +1,49 @@
+version: 2
+jobs:
+  deploy:
+    docker:
+      - image: docker:18.06-git
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Install CLI tools
+          command: |
+            apk --update add py-pip
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Install CLI tools
+          command: pip install awscli
+      - run:
+          name: Login to AWS ECR
+          command: eval `aws ecr get-login --no-include-email`
+      - run:
+          name: Build docker image
+          command: docker build -t blogbase .
+      - run:
+          name: Login to docker hub
+          command: docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
+      - run:
+          name: Push docker image to AWS ECR
+          command: |
+            REVISION_TAG=$CIRCLE_SHA1
+            docker tag blogbase $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blogbase:latest
+            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blogbase:latest
+      - run:
+          name: Push docker image to docker hub
+          command: |
+            REVISION_TAG=$CIRCLE_SHA1
+            docker tag blogbase $DOCKER_HUB_USERNAME/blogbase:latest
+            docker push $DOCKER_HUB_USERNAME/blogbase:latest
+
+workflows:
+  version: 2
+  built_test_deploy:
+    jobs:
+      - deploy:
+          context: edeas123
+          filters:
+            branches:
+              only:
+                - master
